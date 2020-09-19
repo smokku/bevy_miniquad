@@ -1,0 +1,34 @@
+<title>Astro</title>
+<style>
+  html,
+  body,
+  canvas {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+  }
+  :focus { outline: none; }
+</style>
+
+<canvas id="glcanvas" tabindex='1' onblur="this.focus()"></canvas>
+<script src="./gl.js"></script>
+
+<script type="module">
+  import bg from './target/bevy_miniquad.js'
+  miniquad_add_plugin({
+    register_plugin (imports) {
+      console.log('register_plugin', imports, bg.imports)
+      imports.wbg = bg.imports.wbg
+    },
+    on_init () {
+      console.log('on_init', wasm_exports)
+      bg.set_wasm(wasm_exports)
+    }
+  })
+  bg(false).then(imports => {
+    console.log('imports', imports)
+    bg.imports = imports
+    load('./target/bevy_miniquad_bg.wasm')
+  })
+</script>
