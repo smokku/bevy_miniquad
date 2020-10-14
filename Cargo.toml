@@ -5,12 +5,11 @@ authors = ["Tomasz Sterna <tomek@sterna.link>"]
 edition = "2018"
 
 [features]
-default = ["winit"]
-winit = ["bevy/bevy_winit"]
+log-impl = ["miniquad/log-impl"]
 
 [dependencies]
-bevy = { path = "../bevy", default-features = false }
-miniquad = { path = "../miniquad" }
-log = "0.4"
-console_error_panic_hook = "0.1.6"
-console_log = "0.2"
+bevy_app = { version = "*", default-features = false }
+bevy_input = { version = "*", default-features = false }
+bevy_math = { version = "*", default-features = false }
+bevy_window = { version = "*", default-features = false }
+miniquad = "0.2"
