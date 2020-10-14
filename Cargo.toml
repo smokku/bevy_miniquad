@@ -8,8 +8,12 @@ edition = "2018"
 log-impl = ["miniquad/log-impl"]
 
 [dependencies]
-bevy_app = { version = "*", default-features = false }
-bevy_input = { version = "*", default-features = false }
-bevy_math = { version = "*", default-features = false }
-bevy_window = { version = "*", default-features = false }
+bevy_app = { version = "*", default-features = false, path = "../bevy/crates/bevy_app" }
+bevy_input = { version = "*", default-features = false, path = "../bevy/crates/bevy_input" }
+bevy_math = { version = "*", default-features = false, path = "../bevy/crates/bevy_math" }
+bevy_window = { version = "*", default-features = false, path = "../bevy/crates/bevy_window" }
 miniquad = "0.2"
+log = "0.4"
+
+[dev-dependencies]
+bevy = { version = "*", default-features = false, path = "../bevy" }

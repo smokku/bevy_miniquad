@@ -5,8 +5,10 @@ use bevy_input::{
 };
 use bevy_math::Vec2;
 use bevy_window::{CursorMoved, WindowId};
-use miniquad as mq;
+use miniquad::{conf, EventHandlerFree, KeyCode, KeyMods, MouseButton, UserData};
 use std::sync::Arc;
+
+pub use miniquad::Context;
 
 #[cfg(feature = "log-impl")]
 mod log {
