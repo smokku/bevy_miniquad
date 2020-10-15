@@ -14,7 +14,7 @@ pub mod miniquad {
 }
 
 #[cfg(feature = "log-impl")]
-mod log {
+pub mod log {
     pub use miniquad::{debug, error, info, log, trace, warn};
 }
 
