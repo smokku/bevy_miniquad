@@ -1,3 +1,4 @@
+use ::miniquad::{conf, EventHandlerFree, KeyCode, KeyMods, MouseButton, UserData};
 use bevy_app::{App, AppBuilder, AppExit, EventReader, Events, Plugin};
 use bevy_input::{
     keyboard::{ElementState, KeyboardInput},
@@ -5,10 +6,12 @@ use bevy_input::{
 };
 use bevy_math::Vec2;
 use bevy_window::{CursorMoved, WindowId};
-use miniquad::{conf, EventHandlerFree, KeyCode, KeyMods, MouseButton, UserData};
 use std::sync::Arc;
 
-pub use miniquad::Context;
+pub use ::miniquad::Context;
+pub mod miniquad {
+    pub use miniquad::*;
+}
 
 #[cfg(feature = "log-impl")]
 mod log {
@@ -27,6 +30,20 @@ impl Plugin for MiniquadPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.set_runner(miniquad_runner);
     }
+}
+
+pub fn miniquad_runner(mut app: App) {
+    println!("before start");
+    log::debug!("Entering miniquad event loop");
+
+    miniquad::start(conf::Conf::default(), |ctx| {
+        println!("start");
+        app.resources.insert(ctx);
+        println!("initialize");
+        app.initialize();
+        println!("run");
+        UserData::free(Stage::new(app))
+    });
 }
 
 struct Stage {
@@ -126,14 +143,14 @@ impl EventHandlerFree for Stage {
     }
 
     fn update(&mut self) {
-        // println!("update");
+        println!("update");
         if let Some(app_exit_events) = self.app.resources.get_mut::<Events<AppExit>>() {
             if self
                 .app_exit_event_reader
                 .latest(&app_exit_events)
                 .is_some()
             {
-                let ctx = self.app.resources.get_mut::<Context>().unwrap();
+                let ctx = self.app.resources.get_mut::<::miniquad::Context>().unwrap();
                 ctx.request_quit();
             }
         }
@@ -154,13 +171,4 @@ impl EventHandlerFree for Stage {
 
         draw_function(&mut self.app);
     }
-}
-
-pub fn miniquad_runner(mut app: App) {
-    log::debug!("Entering miniquad event loop");
-
-    miniquad::start(conf::Conf::default(), |ctx| {
-        app.resources.insert(ctx);
-        UserData::free(Stage::new(app))
-    });
 }

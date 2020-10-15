@@ -12,8 +12,12 @@ bevy_app = { version = "*", default-features = false, path = "../bevy/crates/bev
 bevy_input = { version = "*", default-features = false, path = "../bevy/crates/bevy_input" }
 bevy_math = { version = "*", default-features = false, path = "../bevy/crates/bevy_math" }
 bevy_window = { version = "*", default-features = false, path = "../bevy/crates/bevy_window" }
-miniquad = "0.2"
+miniquad = { version = "0.3.0-alpha.13", path = "../miniquad" }
 log = "0.4"
 
 [dev-dependencies]
 bevy = { version = "*", default-features = false, path = "../bevy" }
+
+[[example]]
+name = "blobs"
+required-features = ["log-impl"]
