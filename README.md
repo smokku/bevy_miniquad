@@ -1,21 +1,35 @@
-# Bevy + miniquad experiment
+# Bevy engine + miniquad renderer
 
-#### pre-req
+This is a plugin for [Bevy engine][1] that replaces default windowing and rendering plugins
+with [miniquad][2] based one.
 
-    $ rustup target add wasm32-unknown-unknown
-    info: downloading component 'rust-std' for 'wasm32-unknown-unknown'
-    info: installing component 'rust-std' for 'wasm32-unknown-unknown'
-    $ cargo install wasm-bindgen-cli
+[1]: https://github.com/bevyengine/bevy
+[2]: https://github.com/not-fl3/miniquad
 
-#### build & run
+## Usage
 
-    $ cargo build --release --target wasm32-unknown-unknown
-    $ wasm-bindgen --out-dir target --target web target/wasm32-unknown-unknown/release/bevy_miniquad.wasm
-    $ sed -i 's/import.*from .env.;/init.set_wasm = w => wasm = w;/;s/imports\[.env.\] =.*/return imports;/' target/bevy_miniquad.js
+Add to your `Cargo.toml`:
 
-Then serve project dir to browser. i.e.
+```toml
+[dependencies]
+bevy = { version = "*", default-features = false, path = "../bevy" }
+bevy_miniquad = { git = "https://github.com/smokku/bevy_miniquad.git" }
+```
 
-    $ basic-http-server .
-    [INFO ] basic-http-server 0.8.1
-    [INFO ] addr: http://127.0.0.1:4000
-    [INFO ] root dir: .
+You need to implement your own `render` function and add it as a resource:
+
+```rust
+App::build()
+    .add_default_plugins()
+    .add_resource::<DrawFn>(Arc::new(Box::new(draw)))
+    .add_plugin(MiniquadPlugin)
+```
+
+This plugin exposes `Window` resource with window dimensions and cursor position.
+
+## features
+
+### `log-impl`
+
+This plugin exposes `log` module with API compatible with `log` crate, which
+works under every `miniquad` supported platform. See `blobs` example.
