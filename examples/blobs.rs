@@ -1,5 +1,9 @@
-use bevy::prelude::*;
-use bevy_miniquad::{miniquad as mq, Context, DrawFn, MiniquadPlugin};
+use bevy::{
+    input::{keyboard::ElementState, mouse::MouseButtonInput},
+    prelude::*,
+    window::CursorMoved,
+};
+use bevy_miniquad::{miniquad as mq, Context, DrawFn, MiniquadPlugin, Window};
 use std::sync::Arc;
 
 pub fn main() {
@@ -13,6 +17,8 @@ pub fn main() {
         // example stuff
         .add_startup_system(configure_stage.thread_local_system())
         .add_system(update.system())
+        .init_resource::<EventsState>()
+        .add_system(mouse_handler.system())
         .run();
 }
 
@@ -89,7 +95,7 @@ struct Renderer {
 }
 
 fn draw(app: &mut App) {
-    println!("draw");
+    // println!("draw");
     let time = app.resources.get::<Time>().unwrap();
     let mut ctx = app.resources.get_mut::<Context>().unwrap();
     let mut renderer = app.resources.get_mut::<Renderer>().unwrap();
@@ -122,6 +128,53 @@ fn update(time: Res<Time>, mut renderer: ResMut<Renderer>) {
         {
             renderer.blobs_velocities[i].1 *= -1.;
         }
+    }
+}
+
+#[derive(Default)]
+struct EventsState {
+    mouse_button_event_reader: EventReader<MouseButtonInput>,
+    cursor_moved_event_reader: EventReader<CursorMoved>,
+}
+
+fn mouse_handler(
+    mut state: ResMut<EventsState>,
+    mouse_button_input_events: Res<Events<MouseButtonInput>>,
+    cursor_moved_events: Res<Events<CursorMoved>>,
+    mut renderer: ResMut<Renderer>,
+    window: Res<Window>,
+) {
+    let w = window.width as f32;
+    let h = window.height as f32;
+
+    for event in state
+        .mouse_button_event_reader
+        .iter(&mouse_button_input_events)
+    {
+        if event.state == ElementState::Pressed {
+            if renderer.uniforms.blobs_count >= 32 {
+                return;
+            }
+
+            let x = window.cursor_x as f32;
+            let y = window.cursor_y as f32;
+
+            let (x, y) = (x / w, 1. - y / h);
+            let (dx, dy) = (quad_rand::gen_range(-1., 1.), quad_rand::gen_range(-1., 1.));
+
+            let renderer = &mut *renderer;
+            renderer.uniforms.blobs_positions[renderer.uniforms.blobs_count as usize] = (x, y);
+            renderer.blobs_velocities[renderer.uniforms.blobs_count as usize] = (dx, dy);
+            renderer.uniforms.blobs_count += 1;
+        }
+    }
+
+    for event in state.cursor_moved_event_reader.iter(&cursor_moved_events) {
+        let x = event.position.x();
+        let y = event.position.y();
+
+        let (x, y) = (x / w, 1. - y / h);
+        renderer.uniforms.blobs_positions[0] = (x, y);
     }
 }
 

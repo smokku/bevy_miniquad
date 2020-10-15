@@ -17,6 +17,7 @@ log = "0.4"
 
 [dev-dependencies]
 bevy = { version = "*", default-features = false, path = "../bevy" }
+quad-rand = "0.1"
 
 [[example]]
 name = "blobs"
