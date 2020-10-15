@@ -51,11 +51,9 @@ impl Window {
 }
 
 pub fn miniquad_runner(mut app: App) {
-    println!("before start");
     log::debug!("Entering miniquad event loop");
 
     miniquad::start(conf::Conf::default(), |ctx| {
-        println!("start");
         let (width, height) = ctx.screen_size();
 
         app.resources.insert(ctx);
@@ -78,7 +76,7 @@ pub fn miniquad_runner(mut app: App) {
         }
 
         app.initialize();
-        println!("run");
+
         UserData::free(Stage::new(app))
     });
 }

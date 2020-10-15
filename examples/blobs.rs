@@ -1,3 +1,5 @@
+// This example is adapted from https://github.com/not-fl3/miniquad/blob/master/examples/blobs.rs
+
 use bevy::{
     input::{keyboard::ElementState, mouse::MouseButtonInput},
     prelude::*,
@@ -34,7 +36,6 @@ struct Vertex {
 }
 
 fn configure_stage(_world: &mut World, resources: &mut Resources) {
-    println!("configure_stage");
     let renderer = {
         let mut ctx = resources.get_mut::<Context>().unwrap();
         let ctx = &mut *ctx;
@@ -95,7 +96,6 @@ struct Renderer {
 }
 
 fn draw(app: &mut App) {
-    // println!("draw");
     let time = app.resources.get::<Time>().unwrap();
     let mut ctx = app.resources.get_mut::<Context>().unwrap();
     let mut renderer = app.resources.get_mut::<Renderer>().unwrap();
