@@ -5,7 +5,7 @@ use bevy_input::{
     mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
 };
 use bevy_math::Vec2;
-use bevy_window::{CursorMoved, WindowId};
+use bevy_window::{CursorMoved, WindowCreated, WindowId, WindowResized};
 use std::sync::Arc;
 
 pub use ::miniquad::Context;
@@ -23,6 +23,14 @@ use converters::*;
 
 pub type DrawFn = Arc<Box<dyn Fn(&mut App) -> () + Send + Sync>>;
 
+#[derive(Default, Debug)]
+pub struct Window {
+    pub width: usize,
+    pub height: usize,
+    pub cursor_x: usize,
+    pub cursor_y: usize,
+}
+
 #[derive(Default)]
 pub struct MiniquadPlugin;
 
@@ -32,14 +40,43 @@ impl Plugin for MiniquadPlugin {
     }
 }
 
+impl Window {
+    fn new(width: usize, height: usize) -> Self {
+        Window {
+            width,
+            height,
+            ..Window::default()
+        }
+    }
+}
+
 pub fn miniquad_runner(mut app: App) {
     println!("before start");
     log::debug!("Entering miniquad event loop");
 
     miniquad::start(conf::Conf::default(), |ctx| {
         println!("start");
+        let (width, height) = ctx.screen_size();
+
         app.resources.insert(ctx);
-        println!("initialize");
+        app.resources
+            .insert(Window::new(width as usize, height as usize));
+
+        {
+            let mut window_created_events =
+                app.resources.get_mut::<Events<WindowCreated>>().unwrap();
+            window_created_events.send(WindowCreated {
+                id: WindowId::primary(),
+            });
+            let mut window_resized_events =
+                app.resources.get_mut::<Events<WindowResized>>().unwrap();
+            window_resized_events.send(WindowResized {
+                id: WindowId::primary(),
+                width: width as usize,
+                height: height as usize,
+            });
+        }
+
         app.initialize();
         println!("run");
         UserData::free(Stage::new(app))
@@ -94,6 +131,10 @@ impl EventHandlerFree for Stage {
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
         // println!("mouse_motion_event {} {}", x, y);
+        let mut window = self.app.resources.get_mut::<Window>().unwrap();
+        window.cursor_x = x as usize;
+        window.cursor_y = y as usize;
+
         let mut cursor_moved_events = self.app.resources.get_mut::<Events<CursorMoved>>().unwrap();
         cursor_moved_events.send(CursorMoved {
             id: WindowId::primary(),
@@ -142,8 +183,26 @@ impl EventHandlerFree for Stage {
         });
     }
 
+    fn resize_event(&mut self, width: f32, height: f32) {
+        println!("resize_event {} {}", width, height);
+        let mut window = self.app.resources.get_mut::<Window>().unwrap();
+        window.width = width as usize;
+        window.height = height as usize;
+
+        let mut window_resized_events = self
+            .app
+            .resources
+            .get_mut::<Events<WindowResized>>()
+            .unwrap();
+        window_resized_events.send(WindowResized {
+            id: WindowId::primary(),
+            width: width as usize,
+            height: height as usize,
+        });
+    }
+
     fn update(&mut self) {
-        println!("update");
+        // println!("update");
         if let Some(app_exit_events) = self.app.resources.get_mut::<Events<AppExit>>() {
             if self
                 .app_exit_event_reader
