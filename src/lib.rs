@@ -5,7 +5,9 @@ use bevy_input::{
     mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
 };
 use bevy_math::Vec2;
-use bevy_window::{CursorMoved, WindowCreated, WindowId, WindowResized};
+use bevy_window::{
+    CursorMoved, WindowCreated, WindowDescriptor, WindowId, WindowMode, WindowResized,
+};
 use std::sync::Arc;
 
 pub use ::miniquad::Context;
@@ -53,7 +55,20 @@ impl Window {
 pub fn miniquad_runner(mut app: App) {
     log::debug!("Entering miniquad event loop");
 
-    miniquad::start(conf::Conf::default(), |ctx| {
+    let mut conf = conf::Conf::default();
+    {
+        if let Some(desc) = app.resources.get::<WindowDescriptor>() {
+            conf.window_title = desc.title.clone();
+            conf.window_width = desc.width as i32;
+            conf.window_height = desc.height as i32;
+            conf.fullscreen = match desc.mode {
+                WindowMode::Windowed => false,
+                WindowMode::BorderlessFullscreen | WindowMode::Fullscreen { .. } => true,
+            };
+        }
+    }
+
+    miniquad::start(conf, |ctx| {
         let (width, height) = ctx.screen_size();
 
         app.resources.insert(ctx);
@@ -65,13 +80,6 @@ pub fn miniquad_runner(mut app: App) {
                 app.resources.get_mut::<Events<WindowCreated>>().unwrap();
             window_created_events.send(WindowCreated {
                 id: WindowId::primary(),
-            });
-            let mut window_resized_events =
-                app.resources.get_mut::<Events<WindowResized>>().unwrap();
-            window_resized_events.send(WindowResized {
-                id: WindowId::primary(),
-                width: width as usize,
-                height: height as usize,
             });
         }
 
