@@ -1,4 +1,4 @@
-use bevy_input::{keyboard::KeyCode, mouse::MouseButton};
+use bevy::input::{keyboard::KeyCode, mouse::MouseButton};
 use miniquad as mq;
 
 pub fn convert_mouse_button(mouse_button: mq::MouseButton) -> MouseButton {
@@ -131,7 +131,7 @@ pub fn convert_virtual_key_code(key_code: mq::KeyCode) -> Option<KeyCode> {
         mq::KeyCode::Slash => Some(KeyCode::Slash),
         mq::KeyCode::KpSubtract => Some(KeyCode::NumpadSubtract),
         mq::KeyCode::Tab => Some(KeyCode::Tab),
-        mq::KeyCode::CapsLock => Some(KeyCode::OEM102),
+        mq::KeyCode::CapsLock => Some(KeyCode::Oem102),
         mq::KeyCode::Unknown => None,
     }
 }

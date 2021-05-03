@@ -8,15 +8,11 @@ edition = "2018"
 log-impl = ["miniquad/log-impl"]
 
 [dependencies]
-bevy_app = { version = "*", default-features = false, path = "../bevy/crates/bevy_app" }
-bevy_input = { version = "*", default-features = false, path = "../bevy/crates/bevy_input" }
-bevy_math = { version = "*", default-features = false, path = "../bevy/crates/bevy_math" }
-bevy_window = { version = "*", default-features = false, path = "../bevy/crates/bevy_window" }
+bevy = { version = "=0.5.0", default-features = false }
 miniquad = { git = "https://github.com/not-fl3/miniquad.git" }
 log = "0.4"
 
 [dev-dependencies]
-bevy = { version = "*", default-features = false, path = "../bevy" }
 quad-rand = "0.1"
 
 [[example]]

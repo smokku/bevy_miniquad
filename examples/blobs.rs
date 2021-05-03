@@ -1,9 +1,10 @@
 // This example is adapted from https://github.com/not-fl3/miniquad/blob/master/examples/blobs.rs
 
 use bevy::{
-    input::{keyboard::ElementState, mouse::MouseButtonInput},
+    input::{ElementState, mouse::MouseButtonInput},
     prelude::*,
     window::CursorMoved,
+    app::{App, ManualEventReader, Events}
 };
 use bevy_miniquad::{miniquad as mq, Context, DrawFn, MiniquadPlugin, Window};
 use std::sync::Arc;
@@ -12,12 +13,12 @@ pub fn main() {
     log::info!("Starting blobs example");
 
     App::build()
-        .add_default_plugins()
+        .add_plugins(DefaultPlugins)
         // plugin stuff
-        .add_resource::<DrawFn>(Arc::new(Box::new(draw)))
+        .insert_resource::<DrawFn>(Arc::new(Box::new(draw)))
         .add_plugin(MiniquadPlugin)
         // example stuff
-        .add_startup_system(configure_stage.thread_local_system())
+        .add_startup_system(configure_stage.exclusive_system())
         .add_system(update.system())
         .init_resource::<EventsState>()
         .add_system(mouse_handler.system())
@@ -35,13 +36,13 @@ struct Vertex {
     uv: Vec2,
 }
 
-fn configure_stage(_world: &mut World, resources: &mut Resources) {
+fn configure_stage(world: &mut World) {
     let renderer = {
-        let mut ctx = resources.get_mut::<Context>().unwrap();
+        let mut ctx = world.get_resource_mut::<Context>().unwrap();
         let ctx = &mut *ctx;
 
         #[rustfmt::skip]
-        let vertices: [Vertex; 4] = [
+            let vertices: [Vertex; 4] = [
             Vertex { pos : Vec2 { x: -1.0, y: -1.0 }, uv: Vec2 { x: 0., y: 0. } },
             Vertex { pos : Vec2 { x:  1.0, y: -1.0 }, uv: Vec2 { x: 1., y: 0. } },
             Vertex { pos : Vec2 { x:  1.0, y:  1.0 }, uv: Vec2 { x: 1., y: 1. } },
@@ -85,7 +86,7 @@ fn configure_stage(_world: &mut World, resources: &mut Resources) {
         }
     };
 
-    resources.insert(renderer);
+    world.insert_resource(renderer);
 }
 
 struct Renderer {
@@ -96,10 +97,13 @@ struct Renderer {
 }
 
 fn draw(app: &mut App) {
-    let time = app.resources.get::<Time>().unwrap();
-    let mut ctx = app.resources.get_mut::<Context>().unwrap();
-    let mut renderer = app.resources.get_mut::<Renderer>().unwrap();
-    renderer.uniforms.time = time.seconds_since_startup as f32;
+
+    let world_cell = app.world.cell();
+
+    let time = world_cell.get_resource::<Time>().unwrap();
+    let mut ctx = world_cell.get_resource_mut::<Context>().unwrap();
+    let mut renderer = world_cell.get_resource_mut::<Renderer>().unwrap();
+    renderer.uniforms.time = time.seconds_since_startup() as f32;
 
     ctx.begin_default_pass(Default::default());
     ctx.apply_pipeline(&renderer.pipeline);
@@ -114,9 +118,9 @@ fn draw(app: &mut App) {
 fn update(time: Res<Time>, mut renderer: ResMut<Renderer>) {
     for i in 1..renderer.uniforms.blobs_count as usize {
         renderer.uniforms.blobs_positions[i].0 +=
-            renderer.blobs_velocities[i].0 * time.delta_seconds * 0.1;
+            renderer.blobs_velocities[i].0 * time.delta_seconds() * 0.1;
         renderer.uniforms.blobs_positions[i].1 +=
-            renderer.blobs_velocities[i].1 * time.delta_seconds * 0.1;
+            renderer.blobs_velocities[i].1 * time.delta_seconds() * 0.1;
 
         if renderer.uniforms.blobs_positions[i].0 < 0.
             || renderer.uniforms.blobs_positions[i].0 > 1.
@@ -133,8 +137,8 @@ fn update(time: Res<Time>, mut renderer: ResMut<Renderer>) {
 
 #[derive(Default)]
 struct EventsState {
-    mouse_button_event_reader: EventReader<MouseButtonInput>,
-    cursor_moved_event_reader: EventReader<CursorMoved>,
+    mouse_button_event_reader: ManualEventReader<MouseButtonInput>,
+    cursor_moved_event_reader: ManualEventReader<CursorMoved>,
 }
 
 fn mouse_handler(
@@ -150,28 +154,28 @@ fn mouse_handler(
     for event in state
         .mouse_button_event_reader
         .iter(&mouse_button_input_events)
-    {
-        if event.state == ElementState::Pressed {
-            if renderer.uniforms.blobs_count >= 32 {
-                return;
+        {
+            if event.state == ElementState::Pressed {
+                if renderer.uniforms.blobs_count >= 32 {
+                    return;
+                }
+
+                let x = window.cursor_x as f32;
+                let y = window.cursor_y as f32;
+
+                let (x, y) = (x / w, 1. - y / h);
+                let (dx, dy) = (quad_rand::gen_range(-1., 1.), quad_rand::gen_range(-1., 1.));
+
+                let renderer = &mut *renderer;
+                renderer.uniforms.blobs_positions[renderer.uniforms.blobs_count as usize] = (x, y);
+                renderer.blobs_velocities[renderer.uniforms.blobs_count as usize] = (dx, dy);
+                renderer.uniforms.blobs_count += 1;
             }
-
-            let x = window.cursor_x as f32;
-            let y = window.cursor_y as f32;
-
-            let (x, y) = (x / w, 1. - y / h);
-            let (dx, dy) = (quad_rand::gen_range(-1., 1.), quad_rand::gen_range(-1., 1.));
-
-            let renderer = &mut *renderer;
-            renderer.uniforms.blobs_positions[renderer.uniforms.blobs_count as usize] = (x, y);
-            renderer.blobs_velocities[renderer.uniforms.blobs_count as usize] = (dx, dy);
-            renderer.uniforms.blobs_count += 1;
         }
-    }
 
     for event in state.cursor_moved_event_reader.iter(&cursor_moved_events) {
-        let x = event.position.x();
-        let y = event.position.y();
+        let x = event.position.x;
+        let y = event.position.y;
 
         let (x, y) = (x / w, 1. - y / h);
         renderer.uniforms.blobs_positions[0] = (x, y);
