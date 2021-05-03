@@ -1,11 +1,12 @@
 use ::miniquad::{conf, EventHandlerFree, KeyCode, KeyMods, MouseButton, UserData};
-use bevy_app::{App, AppBuilder, AppExit, EventReader, Events, Plugin};
-use bevy_input::{
-    keyboard::{ElementState, KeyboardInput},
+use bevy::app::{App, AppBuilder, AppExit, ManualEventReader, Events, Plugin};
+use bevy::input::{
+    ElementState,
+    keyboard::KeyboardInput,
     mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
 };
-use bevy_math::Vec2;
-use bevy_window::{
+use bevy::math::Vec2;
+use bevy::window::{
     CursorMoved, WindowCreated, WindowDescriptor, WindowId, WindowMode, WindowResized,
 };
 use std::sync::Arc;
@@ -57,7 +58,7 @@ pub fn miniquad_runner(mut app: App) {
 
     let mut conf = conf::Conf::default();
     {
-        if let Some(desc) = app.resources.get::<WindowDescriptor>() {
+        if let Some(desc) = app.world.get_resource::<WindowDescriptor>() {
             conf.window_title = desc.title.clone();
             conf.window_width = desc.width as i32;
             conf.window_height = desc.height as i32;
@@ -71,19 +72,18 @@ pub fn miniquad_runner(mut app: App) {
     miniquad::start(conf, |ctx| {
         let (width, height) = ctx.screen_size();
 
-        app.resources.insert(ctx);
-        app.resources
-            .insert(Window::new(width as usize, height as usize));
+        app.world.insert_resource(ctx);
+        app.world.insert_resource(Window::new(width as usize, height as usize));
 
         {
             let mut window_created_events =
-                app.resources.get_mut::<Events<WindowCreated>>().unwrap();
+                app.world.get_resource_mut::<Events<WindowCreated>>().unwrap();
             window_created_events.send(WindowCreated {
                 id: WindowId::primary(),
             });
         }
 
-        app.initialize();
+        //app.init();
 
         UserData::free(Stage::new(app))
     });
@@ -91,12 +91,12 @@ pub fn miniquad_runner(mut app: App) {
 
 struct Stage {
     app: App,
-    app_exit_event_reader: EventReader<AppExit>,
+    app_exit_event_reader: ManualEventReader<AppExit>,
 }
 
 impl Stage {
     pub fn new(app: App) -> Self {
-        let app_exit_event_reader = EventReader::<AppExit>::default();
+        let app_exit_event_reader = ManualEventReader::<AppExit>::default();
 
         Stage {
             app,
@@ -110,8 +110,8 @@ impl EventHandlerFree for Stage {
         // println!("key_down_event");
         let mut keyboard_input_events = self
             .app
-            .resources
-            .get_mut::<Events<KeyboardInput>>()
+            .world
+            .get_resource_mut::<Events<KeyboardInput>>()
             .unwrap();
         let input_event = KeyboardInput {
             scan_code: 0,
@@ -124,8 +124,8 @@ impl EventHandlerFree for Stage {
         // println!("key_up_event");
         let mut keyboard_input_events = self
             .app
-            .resources
-            .get_mut::<Events<KeyboardInput>>()
+            .world
+            .get_resource_mut::<Events<KeyboardInput>>()
             .unwrap();
         let input_event = KeyboardInput {
             scan_code: 0,
@@ -137,11 +137,11 @@ impl EventHandlerFree for Stage {
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
         // println!("mouse_motion_event {} {}", x, y);
-        let mut window = self.app.resources.get_mut::<Window>().unwrap();
+        let mut window = self.app.world.get_resource_mut::<Window>().unwrap();
         window.cursor_x = x as usize;
         window.cursor_y = y as usize;
 
-        let mut cursor_moved_events = self.app.resources.get_mut::<Events<CursorMoved>>().unwrap();
+        let mut cursor_moved_events = self.app.world.get_resource_mut::<Events<CursorMoved>>().unwrap();
         cursor_moved_events.send(CursorMoved {
             id: WindowId::primary(),
             position: Vec2::new(x, y),
@@ -150,7 +150,7 @@ impl EventHandlerFree for Stage {
     fn mouse_wheel_event(&mut self, x: f32, y: f32) {
         // println!("mouse_wheel_event {} {}", x, y);
         let mut mouse_wheel_input_events =
-            self.app.resources.get_mut::<Events<MouseWheel>>().unwrap();
+            self.app.world.get_resource_mut::<Events<MouseWheel>>().unwrap();
         mouse_wheel_input_events.send(MouseWheel {
             unit: MouseScrollUnit::Line,
             x,
@@ -161,8 +161,8 @@ impl EventHandlerFree for Stage {
         // println!("mouse_button_down_event");
         let mut mouse_button_input_events = self
             .app
-            .resources
-            .get_mut::<Events<MouseButtonInput>>()
+            .world
+            .get_resource_mut::<Events<MouseButtonInput>>()
             .unwrap();
         mouse_button_input_events.send(MouseButtonInput {
             button: convert_mouse_button(button),
@@ -173,8 +173,8 @@ impl EventHandlerFree for Stage {
         // println!("mouse_button_up_event");
         let mut mouse_button_input_events = self
             .app
-            .resources
-            .get_mut::<Events<MouseButtonInput>>()
+            .world
+            .get_resource_mut::<Events<MouseButtonInput>>()
             .unwrap();
         mouse_button_input_events.send(MouseButtonInput {
             button: convert_mouse_button(button),
@@ -183,7 +183,7 @@ impl EventHandlerFree for Stage {
     }
     fn raw_mouse_motion(&mut self, dx: f32, dy: f32) {
         // println!("raw_mouse_motion {} {}", dx, dy);
-        let mut mouse_motion_events = self.app.resources.get_mut::<Events<MouseMotion>>().unwrap();
+        let mut mouse_motion_events = self.app.world.get_resource_mut::<Events<MouseMotion>>().unwrap();
         mouse_motion_events.send(MouseMotion {
             delta: Vec2::new(dx, dy),
         });
@@ -191,31 +191,32 @@ impl EventHandlerFree for Stage {
 
     fn resize_event(&mut self, width: f32, height: f32) {
         println!("resize_event {} {}", width, height);
-        let mut window = self.app.resources.get_mut::<Window>().unwrap();
+        let mut window = self.app.world.get_resource_mut::<Window>().unwrap();
         window.width = width as usize;
         window.height = height as usize;
 
         let mut window_resized_events = self
             .app
-            .resources
-            .get_mut::<Events<WindowResized>>()
+            .world
+            .get_resource_mut::<Events<WindowResized>>()
             .unwrap();
         window_resized_events.send(WindowResized {
             id: WindowId::primary(),
-            width: width as usize,
-            height: height as usize,
+            width,
+            height,
         });
     }
 
     fn update(&mut self) {
         // println!("update");
-        if let Some(app_exit_events) = self.app.resources.get_mut::<Events<AppExit>>() {
+        if let Some(app_exit_events) = self.app.world.get_resource_mut::<Events<AppExit>>() {
             if self
                 .app_exit_event_reader
-                .latest(&app_exit_events)
+                .iter(&app_exit_events)
+                .next_back()
                 .is_some()
             {
-                let ctx = self.app.resources.get_mut::<::miniquad::Context>().unwrap();
+                let ctx = self.app.world.get_resource_mut::<::miniquad::Context>().unwrap();
                 ctx.request_quit();
             }
         }
@@ -228,8 +229,8 @@ impl EventHandlerFree for Stage {
         let draw_function = {
             let fn_ref = self
                 .app
-                .resources
-                .get::<DrawFn>()
+                .world
+                .get_resource::<DrawFn>()
                 .expect("Cannot find draw function resource");
             (*fn_ref).clone()
         };
