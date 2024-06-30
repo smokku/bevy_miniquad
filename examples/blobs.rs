@@ -109,22 +109,23 @@ struct Renderer {
 }
 
 fn draw(app: &mut App) {
-    let world = app.world_mut().as_unsafe_world_cell();
+    let world = app.world_mut();
 
-    let time = unsafe { world.get_resource::<Time>().unwrap() };
-    let mut renderer = unsafe { world.get_resource_mut::<Renderer>().unwrap() };
-    renderer.uniforms.time = time.elapsed().as_secs_f32();
+    world.resource_scope(|world, mut renderer: Mut<Renderer>| {
+        let time = world.get_resource::<Time>().unwrap();
+        renderer.uniforms.time = time.elapsed().as_secs_f32();
 
-    let ctx = unsafe { &mut world.get_non_send_resource_mut::<MiniquadContext>().unwrap().0 };
+        let ctx = &mut world.get_non_send_resource_mut::<MiniquadContext>().unwrap().0;
 
-    ctx.begin_default_pass(Default::default());
-    ctx.apply_pipeline(&renderer.pipeline);
-    ctx.apply_bindings(&renderer.bindings);
-    ctx.apply_uniforms(mq::UniformsSource::table(&renderer.uniforms));
-    ctx.draw(0, 6, 1);
-    ctx.end_render_pass();
+        ctx.begin_default_pass(Default::default());
+        ctx.apply_pipeline(&renderer.pipeline);
+        ctx.apply_bindings(&renderer.bindings);
+        ctx.apply_uniforms(mq::UniformsSource::table(&renderer.uniforms));
+        ctx.draw(0, 6, 1);
+        ctx.end_render_pass();
 
-    ctx.commit_frame();
+        ctx.commit_frame();
+    });
 }
 
 fn update(time: Res<Time>, mut renderer: ResMut<Renderer>) {
