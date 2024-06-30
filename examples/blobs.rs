@@ -154,8 +154,8 @@ fn mouse_handler(
     mut renderer: ResMut<Renderer>,
     window: Res<Window>,
 ) {
-    let w = window.width as f32;
-    let h = window.height as f32;
+    let w = window.width;
+    let h = window.height;
 
     for event in mouse_button_input_events.read() {
         if event.state == ButtonState::Pressed {
@@ -163,8 +163,8 @@ fn mouse_handler(
                 return;
             }
 
-            let x = window.cursor_x as f32;
-            let y = window.cursor_y as f32;
+            let x = window.cursor_x;
+            let y = window.cursor_y;
 
             let (x, y) = (x / w, 1. - y / h);
             let (dx, dy) = (quad_rand::gen_range(-1., 1.), quad_rand::gen_range(-1., 1.));
