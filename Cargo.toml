@@ -13,7 +13,6 @@ bevy_ecs = { version = "0.14.0-dev", default-features = false, path = "../bevy/c
 bevy_input = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_input" }
 bevy_math = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_math" }
 bevy_window = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_window" }
-#miniquad = { git = "https://github.com/not-fl3/miniquad.git" }
 miniquad = "0.4"
 log = "0.4"
 
@@ -24,9 +23,3 @@ quad-rand = "0.1"
 [[example]]
 name = "blobs"
 required-features = ["log-impl"]
-
-#[patch.crates-io]
-#bevy_app = { path = "../bevy/crates" }
-#bevy_input = { path = "../bevy/crates" }
-#bevy_math = { path = "../bevy/crates" }
-#bevy_window = { path = "../bevy/crates" }
