@@ -3,7 +3,7 @@ use bevy_app::{App, AppExit, Plugin};
 use bevy_ecs::{event::{ManualEventReader, Events}, entity::Entity, prelude::Resource};
 use bevy_input::{
     ButtonState,
-    keyboard::{KeyboardInput, NativeKey, Key},
+    keyboard::{KeyboardInput, Key},
     mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
 };
 use bevy_math::Vec2;
@@ -120,6 +120,8 @@ struct Stage {
     app: App,
     app_exit_event_reader: ManualEventReader<AppExit>,
     window_entity: Entity,
+    last_printable_char: Option<char>,
+    last_key_code: Option<KeyCode>,
 }
 
 impl Stage {
@@ -130,24 +132,52 @@ impl Stage {
             app,
             window_entity,
             app_exit_event_reader,
+            last_printable_char: None,
+            last_key_code: None,
         }
     }
 }
 
 impl EventHandler for Stage {
-    fn key_down_event(&mut self, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
-        // println!("key_down_event");
+    fn char_event(&mut self, character: char, _keymods: KeyMods, _repeat: bool) {
+        // println!("char_event");
         let mut keyboard_input_events = self
             .app
             .world_mut()
             .get_resource_mut::<Events<KeyboardInput>>()
             .unwrap();
         let input_event = KeyboardInput {
-            logical_key: Key::Unidentified(NativeKey::Unidentified),
+            logical_key: Key::Character(character.to_string().into()),
             window: self.window_entity,
             state: ButtonState::Pressed,
-            key_code: convert_virtual_key_code(keycode).unwrap(),
+            key_code: convert_virtual_key_code(self.last_key_code.unwrap()).unwrap(),
         };
+        //println!("{:?}", input_event);
+        keyboard_input_events.send(input_event);
+        self.last_printable_char = Some(character);
+    }
+
+    fn key_down_event(&mut self, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
+        // println!("key_down_event");
+        self.last_key_code = Some(keycode);
+        let key_code = convert_virtual_key_code(keycode).unwrap();
+        if key_code_is_printable(key_code) {
+            // Wait for the next char event instead.
+            return;
+        }
+
+        let mut keyboard_input_events = self
+            .app
+            .world_mut()
+            .get_resource_mut::<Events<KeyboardInput>>()
+            .unwrap();
+        let input_event = KeyboardInput {
+            logical_key: key_code_to_unprintable_logical_key(key_code).unwrap(),
+            window: self.window_entity,
+            state: ButtonState::Pressed,
+            key_code,
+        };
+        //println!("{:?}", input_event);
         keyboard_input_events.send(input_event);
     }
     fn key_up_event(&mut self, keycode: KeyCode, _keymods: KeyMods) {
@@ -157,12 +187,19 @@ impl EventHandler for Stage {
             .world_mut()
             .get_resource_mut::<Events<KeyboardInput>>()
             .unwrap();
+        let key_code = convert_virtual_key_code(keycode).unwrap();
+        let logical_key = if key_code_is_printable(key_code) {
+            Key::Character(self.last_printable_char.unwrap().to_string().into())
+        } else {
+            key_code_to_unprintable_logical_key(key_code).unwrap()
+        };
         let input_event = KeyboardInput {
-            logical_key: Key::Unidentified(NativeKey::Unidentified),
+            logical_key,
             window: self.window_entity,
             state: ButtonState::Released,
-            key_code: convert_virtual_key_code(keycode).unwrap(),
+            key_code,
         };
+        //println!("{:?}", input_event);
         keyboard_input_events.send(input_event);
     }
 
