@@ -20,6 +20,7 @@ pub fn main() {
         .add_systems(Startup, configure_stage)
         .add_systems(Update, update)
         .add_systems(Update, mouse_handler)
+        .add_systems(Update, close_on_esc)
         .run();
 }
 
@@ -98,6 +99,22 @@ fn configure_stage(world: &mut World) {
     };
 
     world.insert_resource(renderer);
+}
+
+pub fn close_on_esc(
+    mut commands: Commands,
+    focused_windows: Query<(Entity, &bevy::prelude::Window)>,
+    input: Res<ButtonInput<KeyCode>>,
+) {
+    for (window, focus) in focused_windows.iter() {
+        if !focus.focused {
+            continue;
+        }
+
+        if input.just_pressed(KeyCode::Escape) {
+            commands.entity(window).despawn();
+        }
+    }
 }
 
 #[derive(Resource)]
