@@ -1,24 +1,24 @@
 [package]
 name = "bevy_miniquad"
-version = "0.1.0"
-authors = ["Tomasz Sterna <tomek@sterna.link>"]
+version = "0.2.0"
+authors = ["Tomasz Sterna <tomasz@sterna.link>"]
 edition = "2018"
 
 [features]
 log-impl = ["miniquad/log-impl"]
 
 [dependencies]
-bevy_app = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_app" }
-bevy_ecs = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_ecs" }
-bevy_input = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_input" }
-bevy_math = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_math" }
-bevy_window = { version = "0.14.0-dev", default-features = false, path = "../bevy/crates/bevy_window" }
+bevy_app = { version = "0.15", default-features = false }
+bevy_ecs = { version = "0.15", default-features = false }
+bevy_input = { version = "0.15", default-features = false }
+bevy_math = { version = "0.15", default-features = false }
+bevy_window = { version = "0.15", default-features = false }
 miniquad = "0.4"
 log = "0.4"
 
 [dev-dependencies]
-bevy = { version = "0.14.0-dev", default-features = false, path = "../bevy" }
-quad-rand = "0.1"
+bevy = { version = "0.15", default-features = false }
+quad-rand = "0.2"
 
 [[example]]
 name = "blobs"

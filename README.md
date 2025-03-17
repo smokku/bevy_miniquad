@@ -12,8 +12,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy = { version = "*", default-features = false, path = "../bevy" }
-bevy_miniquad = { git = "https://github.com/smokku/bevy_miniquad.git" }
+bevy = { version = "0.15", default-features = false }
+bevy_miniquad = "0.4"
 ```
 
 You need to implement your own `render` function and add it as a resource:

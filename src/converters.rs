@@ -1,4 +1,7 @@
-use bevy_input::{keyboard::{KeyCode, Key, NativeKeyCode, NativeKey}, mouse::MouseButton};
+use bevy_input::{
+    keyboard::{Key, KeyCode, NativeKey, NativeKeyCode},
+    mouse::MouseButton,
+};
 use miniquad as mq;
 
 pub fn convert_mouse_button(mouse_button: mq::MouseButton) -> MouseButton {
@@ -39,7 +42,7 @@ pub fn key_code_to_unprintable_logical_key(key_code: KeyCode) -> Option<Key> {
         KeyCode::Lang4 => return None,
         KeyCode::Lang5 => return None,
         KeyCode::NonConvert => Key::NonConvert,
-        KeyCode::Delete => Key::Delete, 
+        KeyCode::Delete => Key::Delete,
         KeyCode::End => Key::End,
         KeyCode::Help => Key::Help,
         KeyCode::Home => Key::Home,
@@ -140,132 +143,132 @@ pub fn key_code_to_unprintable_logical_key(key_code: KeyCode) -> Option<Key> {
         KeyCode::F34 => Key::F34,
         KeyCode::F35 => Key::F35,
         _ => return None,
-    })
+    });
 }
 
 pub fn key_code_is_printable(key_code: KeyCode) -> bool {
     match key_code {
-        KeyCode::Unidentified(..) |
-        KeyCode::AltLeft |
-        KeyCode::AltRight |
-        KeyCode::Backspace |
-        KeyCode::CapsLock |
-        KeyCode::ContextMenu |
-        KeyCode::ControlLeft |
-        KeyCode::ControlRight |
-        KeyCode::Enter |
-        KeyCode::SuperLeft |
-        KeyCode::SuperRight |
-        KeyCode::ShiftLeft |
-        KeyCode::ShiftRight |
-        KeyCode::Convert |
-        KeyCode::KanaMode |
-        KeyCode::Lang1 |
-        KeyCode::Lang2 |
-        KeyCode::Lang3 |
-        KeyCode::Lang4 |
-        KeyCode::Lang5 |
-        KeyCode::NonConvert |
-        KeyCode::Delete |
-        KeyCode::End |
-        KeyCode::Help |
-        KeyCode::Home |
-        KeyCode::Insert |
-        KeyCode::PageDown |
-        KeyCode::PageUp |
-        KeyCode::ArrowDown |
-        KeyCode::ArrowLeft |
-        KeyCode::ArrowRight |
-        KeyCode::ArrowUp |
-        KeyCode::NumLock |
-        KeyCode::NumpadBackspace |
-        KeyCode::NumpadClear |
-        KeyCode::NumpadClearEntry |
-        KeyCode::NumpadEnter |
-        KeyCode::NumpadMemoryAdd |
-        KeyCode::NumpadMemoryClear |
-        KeyCode::NumpadMemoryRecall |
-        KeyCode::NumpadMemoryStore |
-        KeyCode::Escape |
-        KeyCode::Fn |
-        KeyCode::FnLock |
-        KeyCode::PrintScreen |
-        KeyCode::ScrollLock |
-        KeyCode::Pause |
-        KeyCode::BrowserBack |
-        KeyCode::BrowserFavorites |
-        KeyCode::BrowserForward |
-        KeyCode::BrowserHome |
-        KeyCode::BrowserRefresh |
-        KeyCode::BrowserSearch |
-        KeyCode::BrowserStop |
-        KeyCode::Eject |
-        KeyCode::LaunchApp1 |
-        KeyCode::LaunchApp2 |
-        KeyCode::LaunchMail |
-        KeyCode::MediaPlayPause |
-        KeyCode::MediaSelect |
-        KeyCode::MediaStop |
-        KeyCode::MediaTrackNext |
-        KeyCode::MediaTrackPrevious |
-        KeyCode::Power |
-        KeyCode::Sleep |
-        KeyCode::AudioVolumeDown |
-        KeyCode::AudioVolumeMute |
-        KeyCode::AudioVolumeUp |
-        KeyCode::WakeUp |
-        KeyCode::Meta |
-        KeyCode::Hyper |
-        KeyCode::Turbo |
-        KeyCode::Abort |
-        KeyCode::Resume |
-        KeyCode::Suspend |
-        KeyCode::Again |
-        KeyCode::Copy |
-        KeyCode::Cut |
-        KeyCode::Find |
-        KeyCode::Open |
-        KeyCode::Paste |
-        KeyCode::Props |
-        KeyCode::Select |
-        KeyCode::Undo |
-        KeyCode::Hiragana |
-        KeyCode::Katakana |
-        KeyCode::F1 |
-        KeyCode::F2 |
-        KeyCode::F3 |
-        KeyCode::F4 |
-        KeyCode::F5 |
-        KeyCode::F6 |
-        KeyCode::F7 |
-        KeyCode::F8 |
-        KeyCode::F9 |
-        KeyCode::F10 |
-        KeyCode::F11 |
-        KeyCode::F12 |
-        KeyCode::F13 |
-        KeyCode::F14 |
-        KeyCode::F15 |
-        KeyCode::F16 |
-        KeyCode::F17 |
-        KeyCode::F18 |
-        KeyCode::F19 |
-        KeyCode::F20 |
-        KeyCode::F21 |
-        KeyCode::F22 |
-        KeyCode::F23 |
-        KeyCode::F24 |
-        KeyCode::F25 |
-        KeyCode::F26 |
-        KeyCode::F27 |
-        KeyCode::F28 |
-        KeyCode::F29 |
-        KeyCode::F30 |
-        KeyCode::F31 |
-        KeyCode::F32 |
-        KeyCode::F33 |
-        KeyCode::F34 |
-        KeyCode::F35 => false,
+        KeyCode::Unidentified(..)
+        | KeyCode::AltLeft
+        | KeyCode::AltRight
+        | KeyCode::Backspace
+        | KeyCode::CapsLock
+        | KeyCode::ContextMenu
+        | KeyCode::ControlLeft
+        | KeyCode::ControlRight
+        | KeyCode::Enter
+        | KeyCode::SuperLeft
+        | KeyCode::SuperRight
+        | KeyCode::ShiftLeft
+        | KeyCode::ShiftRight
+        | KeyCode::Convert
+        | KeyCode::KanaMode
+        | KeyCode::Lang1
+        | KeyCode::Lang2
+        | KeyCode::Lang3
+        | KeyCode::Lang4
+        | KeyCode::Lang5
+        | KeyCode::NonConvert
+        | KeyCode::Delete
+        | KeyCode::End
+        | KeyCode::Help
+        | KeyCode::Home
+        | KeyCode::Insert
+        | KeyCode::PageDown
+        | KeyCode::PageUp
+        | KeyCode::ArrowDown
+        | KeyCode::ArrowLeft
+        | KeyCode::ArrowRight
+        | KeyCode::ArrowUp
+        | KeyCode::NumLock
+        | KeyCode::NumpadBackspace
+        | KeyCode::NumpadClear
+        | KeyCode::NumpadClearEntry
+        | KeyCode::NumpadEnter
+        | KeyCode::NumpadMemoryAdd
+        | KeyCode::NumpadMemoryClear
+        | KeyCode::NumpadMemoryRecall
+        | KeyCode::NumpadMemoryStore
+        | KeyCode::Escape
+        | KeyCode::Fn
+        | KeyCode::FnLock
+        | KeyCode::PrintScreen
+        | KeyCode::ScrollLock
+        | KeyCode::Pause
+        | KeyCode::BrowserBack
+        | KeyCode::BrowserFavorites
+        | KeyCode::BrowserForward
+        | KeyCode::BrowserHome
+        | KeyCode::BrowserRefresh
+        | KeyCode::BrowserSearch
+        | KeyCode::BrowserStop
+        | KeyCode::Eject
+        | KeyCode::LaunchApp1
+        | KeyCode::LaunchApp2
+        | KeyCode::LaunchMail
+        | KeyCode::MediaPlayPause
+        | KeyCode::MediaSelect
+        | KeyCode::MediaStop
+        | KeyCode::MediaTrackNext
+        | KeyCode::MediaTrackPrevious
+        | KeyCode::Power
+        | KeyCode::Sleep
+        | KeyCode::AudioVolumeDown
+        | KeyCode::AudioVolumeMute
+        | KeyCode::AudioVolumeUp
+        | KeyCode::WakeUp
+        | KeyCode::Meta
+        | KeyCode::Hyper
+        | KeyCode::Turbo
+        | KeyCode::Abort
+        | KeyCode::Resume
+        | KeyCode::Suspend
+        | KeyCode::Again
+        | KeyCode::Copy
+        | KeyCode::Cut
+        | KeyCode::Find
+        | KeyCode::Open
+        | KeyCode::Paste
+        | KeyCode::Props
+        | KeyCode::Select
+        | KeyCode::Undo
+        | KeyCode::Hiragana
+        | KeyCode::Katakana
+        | KeyCode::F1
+        | KeyCode::F2
+        | KeyCode::F3
+        | KeyCode::F4
+        | KeyCode::F5
+        | KeyCode::F6
+        | KeyCode::F7
+        | KeyCode::F8
+        | KeyCode::F9
+        | KeyCode::F10
+        | KeyCode::F11
+        | KeyCode::F12
+        | KeyCode::F13
+        | KeyCode::F14
+        | KeyCode::F15
+        | KeyCode::F16
+        | KeyCode::F17
+        | KeyCode::F18
+        | KeyCode::F19
+        | KeyCode::F20
+        | KeyCode::F21
+        | KeyCode::F22
+        | KeyCode::F23
+        | KeyCode::F24
+        | KeyCode::F25
+        | KeyCode::F26
+        | KeyCode::F27
+        | KeyCode::F28
+        | KeyCode::F29
+        | KeyCode::F30
+        | KeyCode::F31
+        | KeyCode::F32
+        | KeyCode::F33
+        | KeyCode::F34
+        | KeyCode::F35 => false,
         _ => true,
     }
 }
@@ -362,6 +365,7 @@ pub fn convert_virtual_key_code(key_code: mq::KeyCode) -> Option<KeyCode> {
         mq::KeyCode::Kp7 => Some(KeyCode::Numpad7),
         mq::KeyCode::Kp8 => Some(KeyCode::Numpad8),
         mq::KeyCode::Kp9 => Some(KeyCode::Numpad9),
+        mq::KeyCode::Back => Some(KeyCode::BrowserBack),
         mq::KeyCode::World1 => None,
         mq::KeyCode::World2 => None,
         mq::KeyCode::KpAdd => Some(KeyCode::NumpadAdd),

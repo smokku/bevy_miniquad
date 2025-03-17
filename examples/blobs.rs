@@ -1,11 +1,11 @@
 // This example is adapted from https://github.com/not-fl3/miniquad/blob/master/examples/blobs.rs
 
 use bevy::{
-    input::{ButtonState, mouse::MouseButtonInput},
+    input::{mouse::MouseButtonInput, ButtonState},
     prelude::*,
-    window::CursorMoved,
 };
-use bevy_miniquad::{miniquad as mq, DrawFnHandle, MiniquadPlugin, Window, MiniquadContext};
+use bevy_miniquad::{miniquad as mq, DrawFnHandle, MiniquadContext, MiniquadPlugin, Window};
+use bevy_window::CursorMoved;
 use std::sync::Arc;
 
 pub fn main() {
@@ -37,7 +37,9 @@ struct Vertex {
 
 fn configure_stage(world: &mut World) {
     let renderer = {
-        let mut ctx = world.get_non_send_resource_mut::<MiniquadContext>().unwrap();
+        let mut ctx = world
+            .get_non_send_resource_mut::<MiniquadContext>()
+            .unwrap();
         let ctx = &mut *(ctx.0);
 
         #[rustfmt::skip]
@@ -66,13 +68,15 @@ fn configure_stage(world: &mut World) {
             images: vec![],
         };
 
-        let shader = ctx.new_shader(
-            mq::ShaderSource::Glsl {
-                vertex: shader::VERTEX,
-                fragment: shader::FRAGMENT,
-            },
-            shader::meta(),
-        ).unwrap();
+        let shader = ctx
+            .new_shader(
+                mq::ShaderSource::Glsl {
+                    vertex: shader::VERTEX,
+                    fragment: shader::FRAGMENT,
+                },
+                shader::meta(),
+            )
+            .unwrap();
 
         let pipeline = ctx.new_pipeline(
             &[mq::BufferLayout::default()],
@@ -103,7 +107,7 @@ fn configure_stage(world: &mut World) {
 
 pub fn close_on_esc(
     mut commands: Commands,
-    focused_windows: Query<(Entity, &bevy::prelude::Window)>,
+    focused_windows: Query<(Entity, &bevy_window::Window)>,
     input: Res<ButtonInput<KeyCode>>,
 ) {
     for (window, focus) in focused_windows.iter() {
@@ -132,7 +136,10 @@ fn draw(app: &mut App) {
         let time = world.get_resource::<Time>().unwrap();
         renderer.uniforms.time = time.elapsed().as_secs_f32();
 
-        let ctx = &mut world.get_non_send_resource_mut::<MiniquadContext>().unwrap().0;
+        let ctx = &mut world
+            .get_non_send_resource_mut::<MiniquadContext>()
+            .unwrap()
+            .0;
 
         ctx.begin_default_pass(Default::default());
         ctx.apply_pipeline(&renderer.pipeline);
@@ -148,9 +155,9 @@ fn draw(app: &mut App) {
 fn update(time: Res<Time>, mut renderer: ResMut<Renderer>) {
     for i in 1..renderer.uniforms.blobs_count as usize {
         renderer.uniforms.blobs_positions[i].0 +=
-            renderer.blobs_velocities[i].0 * time.delta_seconds() * 0.1;
+            renderer.blobs_velocities[i].0 * time.delta_secs() * 0.1;
         renderer.uniforms.blobs_positions[i].1 +=
-            renderer.blobs_velocities[i].1 * time.delta_seconds() * 0.1;
+            renderer.blobs_velocities[i].1 * time.delta_secs() * 0.1;
 
         if renderer.uniforms.blobs_positions[i].0 < 0.
             || renderer.uniforms.blobs_positions[i].0 > 1.

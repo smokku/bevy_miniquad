@@ -1,15 +1,16 @@
-use miniquad::{conf, window, EventHandler, KeyCode, KeyMods, MouseButton};
-use bevy_app::{App, AppExit, Plugin};
-use bevy_ecs::{event::{ManualEventReader, Events}, entity::Entity, prelude::Resource};
+use bevy_app::{App, AppExit, Plugin, Update};
+use bevy_ecs::{entity::Entity, event::EventReader, prelude::Resource};
 use bevy_input::{
-    ButtonState,
-    keyboard::{KeyboardInput, Key},
+    keyboard::{Key, KeyboardInput},
     mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
+    ButtonState,
 };
 use bevy_math::Vec2;
 use bevy_window::{
-    CursorMoved, WindowCreated, WindowMode, WindowResized, WindowResolution, WindowPlugin, Window as WindowComponent
+    CursorMoved, Window as WindowComponent, WindowMode, WindowPlugin, WindowResized,
+    WindowResolution,
 };
+use miniquad::{conf, window, EventHandler, KeyCode, KeyMods, MouseButton};
 use std::sync::Arc;
 
 pub use ::miniquad::Context;
@@ -47,6 +48,14 @@ pub struct MiniquadPlugin;
 impl Plugin for MiniquadPlugin {
     fn build(&self, app: &mut App) {
         app.set_runner(miniquad_runner);
+        app.add_plugins(WindowPlugin::default());
+        app.add_systems(Update, app_exit_system);
+    }
+}
+
+fn app_exit_system(mut event_reader: EventReader<AppExit>) {
+    for _app_exit_event in event_reader.read() {
+        window::request_quit();
     }
 }
 
@@ -75,9 +84,9 @@ pub fn miniquad_runner(mut app: App) -> AppExit {
                 conf.window_height = window.resolution.height() as i32;
                 conf.fullscreen = match window.mode {
                     WindowMode::Windowed => false,
-                    WindowMode::BorderlessFullscreen |
-                    WindowMode::SizedFullscreen |
-                    WindowMode::Fullscreen => true,
+                    WindowMode::BorderlessFullscreen(_)
+                    | WindowMode::SizedFullscreen(_)
+                    | WindowMode::Fullscreen(_) => true,
                 };
             }
         }
@@ -90,23 +99,13 @@ pub fn miniquad_runner(mut app: App) -> AppExit {
         let (width, height) = window::screen_size();
         let scale = window::dpi_scale();
 
-        let window = window_copy.unwrap_or_else(|| {
-            WindowComponent {
-                resolution: WindowResolution::new(width as f32, height as f32)
-                    .with_scale_factor_override(scale),
-                ..Default::default()
-            }
+        let window = window_copy.unwrap_or_else(|| WindowComponent {
+            resolution: WindowResolution::new(width as f32, height as f32)
+                .with_scale_factor_override(scale),
+            ..Default::default()
         });
         let entity = app.world_mut().spawn(window).id();
         app.world_mut().insert_resource(Window::new(width, height));
-
-        {
-            let mut window_created_events =
-                app.world_mut().get_resource_mut::<Events<WindowCreated>>().unwrap();
-            window_created_events.send(WindowCreated {
-                window: entity,
-            });
-        }
 
         app.finish();
 
@@ -118,7 +117,6 @@ pub fn miniquad_runner(mut app: App) -> AppExit {
 
 struct Stage {
     app: App,
-    app_exit_event_reader: ManualEventReader<AppExit>,
     window_entity: Entity,
     last_printable_char: Option<char>,
     last_key_code: Option<KeyCode>,
@@ -126,12 +124,9 @@ struct Stage {
 
 impl Stage {
     pub fn new(app: App, window_entity: Entity) -> Self {
-        let app_exit_event_reader = ManualEventReader::<AppExit>::default();
-
         Stage {
             app,
             window_entity,
-            app_exit_event_reader,
             last_printable_char: None,
             last_key_code: None,
         }
@@ -139,25 +134,21 @@ impl Stage {
 }
 
 impl EventHandler for Stage {
-    fn char_event(&mut self, character: char, _keymods: KeyMods, _repeat: bool) {
+    fn char_event(&mut self, character: char, _keymods: KeyMods, repeat: bool) {
         // println!("char_event");
-        let mut keyboard_input_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<KeyboardInput>>()
-            .unwrap();
         let input_event = KeyboardInput {
             logical_key: Key::Character(character.to_string().into()),
             window: self.window_entity,
             state: ButtonState::Pressed,
             key_code: convert_virtual_key_code(self.last_key_code.unwrap()).unwrap(),
+            repeat,
         };
         //println!("{:?}", input_event);
-        keyboard_input_events.send(input_event);
+        self.app.world_mut().send_event(input_event);
         self.last_printable_char = Some(character);
     }
 
-    fn key_down_event(&mut self, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
+    fn key_down_event(&mut self, keycode: KeyCode, _keymods: KeyMods, repeat: bool) {
         // println!("key_down_event");
         self.last_key_code = Some(keycode);
         let key_code = convert_virtual_key_code(keycode).unwrap();
@@ -166,27 +157,18 @@ impl EventHandler for Stage {
             return;
         }
 
-        let mut keyboard_input_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<KeyboardInput>>()
-            .unwrap();
         let input_event = KeyboardInput {
             logical_key: key_code_to_unprintable_logical_key(key_code).unwrap(),
             window: self.window_entity,
             state: ButtonState::Pressed,
             key_code,
+            repeat,
         };
         //println!("{:?}", input_event);
-        keyboard_input_events.send(input_event);
+        self.app.world_mut().send_event(input_event);
     }
     fn key_up_event(&mut self, keycode: KeyCode, _keymods: KeyMods) {
         // println!("key_up_event");
-        let mut keyboard_input_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<KeyboardInput>>()
-            .unwrap();
         let key_code = convert_virtual_key_code(keycode).unwrap();
         let logical_key = if key_code_is_printable(key_code) {
             Key::Character(self.last_printable_char.unwrap().to_string().into())
@@ -198,9 +180,10 @@ impl EventHandler for Stage {
             window: self.window_entity,
             state: ButtonState::Released,
             key_code,
+            repeat: false,
         };
         //println!("{:?}", input_event);
-        keyboard_input_events.send(input_event);
+        self.app.world_mut().send_event(input_event);
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
@@ -211,8 +194,7 @@ impl EventHandler for Stage {
         window.cursor_x = x;
         window.cursor_y = y;
 
-        let mut cursor_moved_events = self.app.world_mut().get_resource_mut::<Events<CursorMoved>>().unwrap();
-        cursor_moved_events.send(CursorMoved {
+        self.app.world_mut().send_event(CursorMoved {
             window: self.window_entity,
             position: Vec2::new(x, y),
             delta: Some(Vec2::new(delta_x, delta_y)),
@@ -220,9 +202,7 @@ impl EventHandler for Stage {
     }
     fn mouse_wheel_event(&mut self, x: f32, y: f32) {
         // println!("mouse_wheel_event {} {}", x, y);
-        let mut mouse_wheel_input_events =
-            self.app.world_mut().get_resource_mut::<Events<MouseWheel>>().unwrap();
-        mouse_wheel_input_events.send(MouseWheel {
+        self.app.world_mut().send_event(MouseWheel {
             window: self.window_entity,
             unit: MouseScrollUnit::Line,
             x,
@@ -231,12 +211,7 @@ impl EventHandler for Stage {
     }
     fn mouse_button_down_event(&mut self, button: MouseButton, _x: f32, _y: f32) {
         // println!("mouse_button_down_event");
-        let mut mouse_button_input_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<MouseButtonInput>>()
-            .unwrap();
-        mouse_button_input_events.send(MouseButtonInput {
+        self.app.world_mut().send_event(MouseButtonInput {
             window: self.window_entity,
             button: convert_mouse_button(button),
             state: ButtonState::Pressed,
@@ -244,12 +219,7 @@ impl EventHandler for Stage {
     }
     fn mouse_button_up_event(&mut self, button: MouseButton, _x: f32, _y: f32) {
         // println!("mouse_button_up_event");
-        let mut mouse_button_input_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<MouseButtonInput>>()
-            .unwrap();
-        mouse_button_input_events.send(MouseButtonInput {
+        self.app.world_mut().send_event(MouseButtonInput {
             window: self.window_entity,
             button: convert_mouse_button(button),
             state: ButtonState::Released,
@@ -257,8 +227,7 @@ impl EventHandler for Stage {
     }
     fn raw_mouse_motion(&mut self, dx: f32, dy: f32) {
         // println!("raw_mouse_motion {} {}", dx, dy);
-        let mut mouse_motion_events = self.app.world_mut().get_resource_mut::<Events<MouseMotion>>().unwrap();
-        mouse_motion_events.send(MouseMotion {
+        self.app.world_mut().send_event(MouseMotion {
             delta: Vec2::new(dx, dy),
         });
     }
@@ -269,12 +238,7 @@ impl EventHandler for Stage {
         window.width = width;
         window.height = height;
 
-        let mut window_resized_events = self
-            .app
-            .world_mut()
-            .get_resource_mut::<Events<WindowResized>>()
-            .unwrap();
-        window_resized_events.send(WindowResized {
+        self.app.world_mut().send_event(WindowResized {
             window: self.window_entity,
             width: width,
             height: height,
@@ -282,18 +246,6 @@ impl EventHandler for Stage {
     }
 
     fn update(&mut self) {
-        // println!("update");
-        if let Some(app_exit_events) = self.app.world_mut().get_resource_mut::<Events<AppExit>>() {
-            if self
-                .app_exit_event_reader
-                .read(&app_exit_events)
-                .next()
-                .is_some()
-            {
-                window::request_quit();
-            }
-        }
-
         self.app.update();
     }
 
